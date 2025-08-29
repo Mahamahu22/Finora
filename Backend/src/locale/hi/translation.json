@@ -1,0 +1,14 @@
+{
+  "errors": {
+    "notFound": "संसाधन नहीं मिला",
+    "unauthorized": "अनधिकृत",
+    "forbidden": "निषिद्ध",
+    "invalidCredentials": "ईमेल या पासवर्ड गलत है",
+    "emailInUse": "ईमेल पहले से उपयोग में है"
+  },
+  "auth": {
+    "registered": "पंजीकरण सफल",
+    "loggedIn": "लॉगिन सफल",
+    "loggedOut": "लॉगआउट सफल"
+  }
+}

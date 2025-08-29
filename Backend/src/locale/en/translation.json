@@ -1,0 +1,14 @@
+{
+  "errors": {
+    "notFound": "Resource not found",
+    "unauthorized": "Unauthorized",
+    "forbidden": "Forbidden",
+    "invalidCredentials": "Invalid email or password",
+    "emailInUse": "Email already in use"
+  },
+  "auth": {
+    "registered": "Registration successful",
+    "loggedIn": "Login successful",
+    "loggedOut": "Logout successful"
+  }
+}
