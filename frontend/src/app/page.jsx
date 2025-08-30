@@ -8,8 +8,11 @@ import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import SecurityIcon from "@mui/icons-material/Security";
 import InsightsIcon from "@mui/icons-material/Insights";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
+import { useRouter } from "next/navigation";
+
 
 const Homepage = () => {
+  const router = useRouter();
   const features = [
     { title: "Expenses", desc: "Record and categorize your spending with ease.", icon: <AccountBalanceWalletIcon fontSize="large" color="primary" /> },
     { title: "Income", desc: "Track all your income sources in one place.", icon: <SavingsIcon fontSize="large" color="primary" /> },
@@ -63,7 +66,16 @@ const Homepage = () => {
         <Box sx={{ backgroundColor: "rgba(0,0,0,0.6)", p: 4, borderRadius: 3 }}>
           <Typography variant="h2" gutterBottom fontWeight="bold">Get Started. Track. Save. Grow.</Typography>
           <Typography variant="h5" gutterBottom>Manage money wisely, visualize reports, and achieve your dreams.</Typography>
-          <Button variant="contained" color="secondary" size="large" sx={{ mt: 3 }}>Get Started</Button>
+          <Button
+  variant="contained"
+  color="secondary"
+  size="large"
+  sx={{ mt: 3 }}
+  onClick={() => router.push("/registerpage")} // <- navigate to register page
+>
+  Get Started
+</Button>
+
         </Box>
       </Box>
 
