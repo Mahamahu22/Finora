@@ -10,7 +10,7 @@ const theme = createTheme({
     },
     background: {
       default: "#7b5536ff", // Light beige background
-      paper: "#f0e4daff",   // Slight cream for sections
+      paper: "#e9d9ccff",   // Slight cream for sections
     },
     text: {
       primary: "#3e2c23",

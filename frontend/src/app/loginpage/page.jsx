@@ -1,44 +1,37 @@
 "use client";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import api from "../../utils/api";
+import { saveUser } from "../../utils/storage";
 import AuthForm from "../../components/AuthForm";
 
 const LoginPage = () => {
   const router = useRouter();
 
-  // Function to handle login
   const handleLogin = async (formData, setError, setSuccess) => {
-    // Reset messages
     setError("");
     setSuccess("");
 
     try {
-      // Send login request
-      const res = await axios.post("http://localhost:4000/api/auth/login", formData);
-       // Log the entire response to check token
-      console.log("Login API response:", res.data);
+      const res = await api.post("/auth/login", formData);
 
-      // Check if token is received
-      if (!res.data?.data?.token) {
+      // Make sure token exists
+      const token = res?.data?.data?.token;
+      const user = res?.data?.data?.user;
+
+      if (!token) {
         setError("No token received from server");
         return;
       }
 
-      // Save token and user info to localStorage
-      localStorage.setItem(
-        "user",
-        JSON.stringify({ token: res.data.data.token, user: res.data.data.user })
-      );
+      // Save token + user to localStorage via helper
+      saveUser({ token, user });
 
-      // Show success message
-      setSuccess(res.data.message);
+      setSuccess(res.data?.message || "Login successful");
 
-      // Redirect to dashboard after 1.5 seconds
-     // setTimeout(() => router.push("/dashboard"), 1500);
-
+      // Redirect after a short delay (optional)
+      setTimeout(() => router.push("/dashboard"), 1500);
     } catch (err) {
-      console.error("Login error:", err.response || err);
-      setError(err.response?.data?.message || "Something went wrong");
+      setError(err?.response?.data?.message || "Something went wrong");
     }
   };
 

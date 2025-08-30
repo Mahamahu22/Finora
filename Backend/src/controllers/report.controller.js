@@ -52,6 +52,7 @@ exports.summary = async (req, res) => {
       status: "success",
       message: "Summary report generated",
       report: {
+        name: req.user.name, 
         email: req.user.email,
         startDate,
         endDate,
