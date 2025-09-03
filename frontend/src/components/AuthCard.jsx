@@ -10,6 +10,7 @@ import {
   ThemeProvider,
   IconButton,
   InputAdornment,
+  CircularProgress,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import theme from "../theme";
@@ -31,7 +32,7 @@ const AuthForm = ({ title, fields, submitText, onSubmit }) => {
     setError("");
     setSuccess("");
     try {
-      await onSubmit(formData, setError, setSuccess); // callback from parent
+      await onSubmit(formData, setError, setSuccess);
     } catch (err) {
       setError(err.message || "Something went wrong");
     } finally {
@@ -51,12 +52,13 @@ const AuthForm = ({ title, fields, submitText, onSubmit }) => {
           alignItems: "center",
           justifyContent: "center",
           px: 2,
+          fontFamily: "'Poppins', sans-serif", // ✅ Better font
         }}
       >
         <Container
           maxWidth="xs"
           sx={{
-            bgcolor: "rgba(241, 230, 219, 0.85)",
+            bgcolor: "rgba(241, 230, 219, 0.9)",
             p: 4,
             borderRadius: 4,
             boxShadow: "0 15px 35px rgba(0,0,0,0.3)",
@@ -67,21 +69,23 @@ const AuthForm = ({ title, fields, submitText, onSubmit }) => {
               "0%": { transform: "translateY(-50px)", opacity: 0 },
               "100%": { transform: "translateY(0)", opacity: 1 },
             },
-            transition: "transform 0.3s ease, box-shadow 0.3s ease",
-            "&:hover": {
-              transform: "translateY(-5px)",
-              boxShadow: "0 20px 40px rgba(0,0,0,0.35)",
-            },
           }}
         >
+          {/* Title */}
           <Typography
             variant="h4"
             gutterBottom
-            sx={{ color: "primary.main", fontWeight: "bold" }}
+            sx={{
+              color: "primary.main",
+              fontWeight: "bold",
+              fontFamily: "'Poppins', sans-serif", // ✅ Modern font
+              letterSpacing: "0.5px",
+            }}
           >
             {title}
           </Typography>
 
+          {/* Success / Error Messages */}
           {success && (
             <Alert
               severity="success"
@@ -89,17 +93,25 @@ const AuthForm = ({ title, fields, submitText, onSubmit }) => {
                 mb: 2,
                 bgcolor: theme.palette.secondary.main,
                 color: theme.palette.primary.main,
+                fontFamily: "'Poppins', sans-serif",
               }}
             >
               {success}
             </Alert>
           )}
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert
+              severity="error"
+              sx={{
+                mb: 2,
+                fontFamily: "'Poppins', sans-serif",
+              }}
+            >
               {error}
             </Alert>
           )}
 
+          {/* Form */}
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
             {fields.map((field) => (
               <TextField
@@ -141,16 +153,18 @@ const AuthForm = ({ title, fields, submitText, onSubmit }) => {
                 }
                 sx={{
                   "& .MuiInputBase-root": {
-                    transition:
-                      "transform 0.3s ease, box-shadow 0.3s ease",
+                    transition: "transform 0.3s ease, box-shadow 0.3s ease",
                     "&:focus-within": {
                       transform: "scale(1.02)",
                       boxShadow: "0 0 10px rgba(62,44,35,0.3)",
                     },
                   },
+                  fontFamily: "'Poppins', sans-serif",
                 }}
               />
             ))}
+
+            {/* ✅ Button with Circular Loader */}
             <Button
               type="submit"
               fullWidth
@@ -158,6 +172,8 @@ const AuthForm = ({ title, fields, submitText, onSubmit }) => {
               sx={{
                 mt: 3,
                 bgcolor: "primary.main",
+                fontWeight: "bold",
+                fontFamily: "'Poppins', sans-serif",
                 "&:hover": {
                   bgcolor: "primary.dark",
                   transform: "scale(1.02)",
@@ -166,7 +182,11 @@ const AuthForm = ({ title, fields, submitText, onSubmit }) => {
               }}
               disabled={loading}
             >
-              {loading ? `${submitText}...` : submitText}
+              {loading ? (
+                <CircularProgress size={24} sx={{ color: "white" }} />
+              ) : (
+                submitText
+              )}
             </Button>
           </Box>
         </Container>

@@ -17,9 +17,8 @@ import api from "../../utils/api";
 import { getUser, removeUser } from "../../utils/storage";
 
 // components
-import Sidebar from "../../components/SideBar";
+import Sidebar from "../../components/SideBar"; // exact casing
 import DashboardCard from "../../components/DashboardCard";
-
 
 const Dashboard = () => {
   const router = useRouter();
@@ -39,7 +38,6 @@ const Dashboard = () => {
       try {
         const res = await api.get("/reports/summary");
         setReport(res.data.report ?? {});
-
         const stored = getUser();
         if (stored?.user) setUser(stored.user);
       } catch (err) {
@@ -55,7 +53,11 @@ const Dashboard = () => {
   }, [router]);
 
   const formatINR = (num) =>
-    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(num || 0);
+    new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(num || 0);
 
   const menuItems = [
     { text: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },

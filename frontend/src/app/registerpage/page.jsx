@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import api from "../../utils/api";
-import AuthForm from "../../components/AuthForm";
+import AuthForm from "../../components/AuthCard";
 
 const RegisterPage = () => {
   const router = useRouter();

@@ -6,6 +6,7 @@ const USER_KEY = "user";
 export const saveUser = (data) => {
   if (typeof window !== "undefined") {
     localStorage.setItem(USER_KEY, JSON.stringify(data));
+    window.dispatchEvent(new Event("userChange")); // 🔔 notify listeners
   }
 };
 
@@ -20,6 +21,7 @@ export const getUser = () => {
 export const removeUser = () => {
   if (typeof window !== "undefined") {
     localStorage.removeItem(USER_KEY);
+    window.dispatchEvent(new Event("userChange")); // 🔔 notify listeners
   }
 };
 
@@ -47,5 +49,6 @@ export const removeItem = (key) => {
 export const clearAll = () => {
   if (typeof window !== "undefined") {
     localStorage.clear();
+    window.dispatchEvent(new Event("userChange")); // 🔔 notify all cleared
   }
 };

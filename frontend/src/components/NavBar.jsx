@@ -1,32 +1,49 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  IconButton,
-  Box,
-  Drawer,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  GlobalStyles,
+  AppBar, Toolbar, Typography, Button, IconButton,
+  Box, Drawer, List, ListItem, ListItemButton,
+  ListItemText, GlobalStyles
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useRouter } from "next/navigation";
+import { getUser, removeUser } from "../utils/storage"; // ✅ use helpers
 
 const NavBar = () => {
   const [open, setOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
-  // Add "Home" to the nav items
-  const navItems = ["Home", "Dashboard", "Profile", "Logout"];
+  const checkLogin = () => {
+    const user = getUser();
+    setIsLoggedIn(!!user);
+  };
 
-  // Handle navigation click
+  useEffect(() => {
+    checkLogin();
+    setMounted(true);
+
+    // ✅ Listen to both storage changes & custom event
+    const handleChange = () => checkLogin();
+    window.addEventListener("storage", handleChange);
+    window.addEventListener("userChange", handleChange);
+
+    return () => {
+      window.removeEventListener("storage", handleChange);
+      window.removeEventListener("userChange", handleChange);
+    };
+  }, []);
+
+  if (!mounted) return null; // prevent hydration mismatch
+
+  const navItems = isLoggedIn
+    ? ["Home", "Dashboard", "Profile", "Logout"]
+    : ["Home", "Login"];
+
   const handleNavClick = (item) => {
-    setOpen(false); // close drawer if open
+    setOpen(false);
+
     switch (item) {
       case "Home":
         router.push("/");
@@ -37,8 +54,12 @@ const NavBar = () => {
       case "Profile":
         router.push("/profile");
         break;
+      case "Login":
+        router.push("/loginpage");
+        break;
       case "Logout":
-        localStorage.removeItem("user");
+        removeUser();   // ✅ use helper, triggers userChange
+        setIsLoggedIn(false);
         router.push("/loginpage");
         break;
       default:
@@ -48,64 +69,34 @@ const NavBar = () => {
 
   return (
     <>
-      {/* Fix body default margin/padding */}
-      <GlobalStyles
-        styles={{
-          "html, body": {
-            margin: 0,
-            padding: 0,
-            backgroundColor: "#d7ccc8", // light brown background
-          },
-        }}
-      />
+      <GlobalStyles styles={{ "html, body": { margin: 0, padding: 0, backgroundColor: "#d7ccc8" } }} />
 
-      <AppBar
-        position="fixed"
-        elevation={0}
-        sx={{
-          backgroundColor: "#4E342E", // dark brown navbar
-          margin: 0,
-          padding: 0,
-        }}
-      >
+      <AppBar position="fixed" elevation={0} sx={{ backgroundColor: "#4E342E", margin: 0, padding: 0 }}>
         <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-          <Typography
-            variant="h6"
-            sx={{ fontWeight: "bold", cursor: "pointer" }}
-            onClick={() => router.push("/")}
-          >
+          <Typography variant="h6" sx={{ fontWeight: "bold", cursor: "pointer" }}
+            onClick={() => router.push("/")}>
             Finora
           </Typography>
 
-          {/* Desktop navigation buttons */}
+          {/* Desktop Nav */}
           <Box sx={{ display: { xs: "none", sm: "flex" }, gap: 2 }}>
             {navItems.map((item) => (
-              <Button
-                key={item}
-                color="inherit"
-                onClick={() => handleNavClick(item)}
-              >
+              <Button key={item} color="inherit" onClick={() => handleNavClick(item)}>
                 {item}
               </Button>
             ))}
           </Box>
 
-          {/* Mobile hamburger menu */}
-          <IconButton
-            edge="end"
-            color="inherit"
-            sx={{ display: { sm: "none" } }}
-            onClick={() => setOpen(true)}
-          >
+          {/* Mobile Nav */}
+          <IconButton edge="end" color="inherit" sx={{ display: { sm: "none" } }}
+            onClick={() => setOpen(true)}>
             <MenuIcon />
           </IconButton>
         </Toolbar>
       </AppBar>
 
-      {/* Add Toolbar spacer so content is not hidden behind fixed navbar */}
       <Toolbar />
 
-      {/* Mobile Drawer */}
       <Drawer anchor="right" open={open} onClose={() => setOpen(false)}>
         <List sx={{ width: 200 }}>
           {navItems.map((item) => (
