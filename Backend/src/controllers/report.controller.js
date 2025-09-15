@@ -71,97 +71,97 @@ exports.summary = async (req, res) => {
   }
 };
 
-/**
- * Monthly trends grouped by year/month
- */
+// Monthly trends grouped by year/month
 exports.monthly = async (req, res) => {
   try {
     const userId = req.user.id;
     const { startDate, endDate } = req.query;
 
-    const expMatch = { userId, active: true };
-    const incMatch = { userId, active: true };
+    const match = { userId, active: true };
 
     if (startDate && endDate) {
-      expMatch.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
-      incMatch.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
+      match.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
     }
 
-    const [exp, inc] = await Promise.all([
-      // 👉 Expenses grouped by category + income source
+    const [expenses, income] = await Promise.all([
       Expense.aggregate([
-        { $match: expMatch },
-        {
-          $lookup: {
-            from: "incomes",            // Mongo collection (check plural)
-            localField: "incomeId",
-            foreignField: "id",
-            as: "incomeInfo"
-          }
-        },
-        { $unwind: { path: "$incomeInfo", preserveNullAndEmptyArrays: true } },
+        { $match: match },
         {
           $group: {
             _id: {
-              category: "$category",
-              fromSource: "$incomeInfo.source"
+              year: { $year: "$date" },
+              month: { $month: "$date" },
             },
-            count: { $sum: 1 },
-            total: { $sum: "$amount" }
-          }
+            total: { $sum: "$amount" },
+          },
         },
-        // ✅ Flatten fields (remove `_id`)
         {
           $project: {
             _id: 0,
-            category: "$_id.category",
-            fromSource: "$_id.fromSource",
-            count: 1,
-            total: 1
-          }
+            year: "$_id.year",
+            month: "$_id.month",
+            expenses: "$total",
+          },
         },
-        { $sort: { total: -1 } }
       ]),
 
-      // 👉 Income grouped by source
       Income.aggregate([
-        { $match: incMatch },
+        { $match: match },
         {
           $group: {
-            _id: "$source",
-            count: { $sum: 1 },
-            total: { $sum: "$amount" }
-          }
+            _id: {
+              year: { $year: "$date" },
+              month: { $month: "$date" },
+            },
+            total: { $sum: "$amount" },
+          },
         },
-        // ✅ Flatten fields (remove `_id`)
         {
           $project: {
             _id: 0,
-            source: "$_id",
-            count: 1,
-            total: 1
-          }
+            year: "$_id.year",
+            month: "$_id.month",
+            income: "$total",
+          },
         },
-        { $sort: { total: -1 } }
-      ])
+      ]),
     ]);
+
+    // 🔗 Merge income + expenses by year/month
+    const reportMap = new Map();
+
+    expenses.forEach((e) => {
+      const key = `${e.year}-${e.month}`;
+      reportMap.set(key, { ...e });
+    });
+
+    income.forEach((i) => {
+      const key = `${i.year}-${i.month}`;
+      if (reportMap.has(key)) {
+        reportMap.set(key, { ...reportMap.get(key), ...i });
+      } else {
+        reportMap.set(key, { ...i });
+      }
+    });
+
+    const report = Array.from(reportMap.values()).map((r) => ({
+      year: r.year,
+      month: r.month,
+      income: r.income || 0,
+      expenses: r.expenses || 0,
+      net: (r.income || 0) - (r.expenses || 0),
+    }));
 
     res.json({
       status: "success",
       message: "Monthly trends report generated",
-      report: {
-        email: req.user.email,
-        startDate,
-        endDate,
-        expenses: exp,
-        income: inc
-      }
+      report,
     });
   } catch (error) {
     res.status(500).json({
       status: "error",
       message: "Failed to generate monthly report",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -223,12 +223,12 @@ exports.category = async (req, res) => {
 
 exports.export = async (req, res) => {
   try {
-    const { scope = "expenses", startDate, endDate } = req.query;
+    const { scope = "expenses", format = "json", startDate, endDate } = req.query;
     const userId = req.user.id;
 
     let match = { userId, active: true };
 
-    // 👉 Date Range (only startDate & endDate)
+    // 👉 Date Range
     if (startDate && endDate) {
       match.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
     }
@@ -243,26 +243,45 @@ exports.export = async (req, res) => {
       const incomes = await Income.find(match).lean();
       const expenses = await Expense.find(match).lean();
       data = [
-        ...incomes.map(i => ({ ...i, type: "Income" })),
-        ...expenses.map(e => ({ ...e, type: "Expense" }))
+        ...incomes.map((i) => ({ ...i, type: "Income" })),
+        ...expenses.map((e) => ({ ...e, type: "Expense" })),
       ];
     }
 
     // 👉 Attach User Email
-    data = data.map(item => ({ ...item, userEmail: req.user.email }));
+    data = data.map((item) => ({ ...item, userEmail: req.user.email }));
 
-    // 👉 Return JSON only
+    // ✅ PDF Export
+    if (format === "pdf") {
+      const rangeText = startDate && endDate ? `${startDate} to ${endDate}` : null;
+      const pdf = await exportPDF(data, scope === "all" ? "Combined Report" : scope, {
+        range: rangeText,
+      });
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename=${pdf.name}`);
+      return res.send(pdf.buffer);
+    }
+
+    // ✅ CSV Export (later)
+    if (format === "csv") {
+      const csv = exportCSV(data);
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", `attachment; filename=${scope}_report.csv`);
+      return res.send(csv);
+    }
+
+    // ✅ Default JSON
     return res.json({
       status: "success",
       message: `${scope.charAt(0).toUpperCase() + scope.slice(1)} report fetched`,
-      data
+      data,
     });
-
   } catch (error) {
     res.status(500).json({
       status: "error",
       message: "Failed to export report",
-      error: error.message
+      error: error.message,
     });
   }
 };

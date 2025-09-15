@@ -2,8 +2,7 @@
 import { useEffect, useState } from "react";
 import api from "@/utils/api";
 import { Box, Typography, CircularProgress } from "@mui/material";
-import { saveItem, getItem, removeItem } from "@/utils/storage";
-import ProfileCard from "@/components/ProfileCard"; // Import reusable component
+import UserProfile from "@/components/UserProfile"; // Reusable component (shows avatar + form only)
 
 const tips = [
   "Review your monthly budget at the start of each month.",
@@ -25,25 +24,15 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [tip, setTip] = useState("");
-  const [imageKey, setImageKey] = useState("");
 
-  // Fetch user profile
+  // ✅ Fetch user profile
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const res = await api.get("/user/profile");
         const data = res.data.data;
 
-        const key = `profileImage_${data.email}`;
-        setImageKey(key);
-
-        const savedImage = getItem(key);
-
-        setProfile({
-          ...data,
-          imagePreview: savedImage || "",
-        });
-
+        setProfile(data);
         setForm({ name: data.name || "", email: data.email || "" });
       } catch (err) {
         console.error("Error fetching profile:", err);
@@ -53,10 +42,11 @@ export default function ProfilePage() {
     };
     fetchProfile();
 
+    // Random finance tip
     setTip(tips[Math.floor(Math.random() * tips.length)]);
   }, []);
 
-  // Save profile updates
+  // ✅ Save profile updates
   const handleUpdate = async () => {
     try {
       setSaving(true);
@@ -69,27 +59,6 @@ export default function ProfilePage() {
     } finally {
       setSaving(false);
     }
-  };
-
-  // Image upload
-  const handleImageUpload = (file) => {
-    if (!imageKey) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      setProfile((prev) => {
-        const updated = { ...prev, imagePreview: reader.result };
-        saveItem(imageKey, reader.result);
-        return updated;
-      });
-    };
-    reader.readAsDataURL(file);
-  };
-
-  // Delete image
-  const handleDeleteImage = () => {
-    if (!imageKey) return;
-    setProfile((prev) => ({ ...prev, imagePreview: "" }));
-    removeItem(imageKey);
   };
 
   if (loading)
@@ -107,25 +76,29 @@ export default function ProfilePage() {
       sx={{ background: "linear-gradient(to right, #f7d5a9ff, #bb863aff)" }}
       fontFamily='"Roboto Slab", serif'
     >
-      {/* Welcome Message */}
+      {/* ✅ Welcome Message */}
       <Box p={3}>
-        <Typography variant="h4" sx={{ mb: 1, fontWeight: "bold", color: "#5d3b27" }}>
+        <Typography
+          variant="h4"
+          sx={{ mb: 1, fontWeight: "bold", color: "#5d3b27" }}
+        >
           Welcome, {profile.name} 👋
         </Typography>
-        <Typography variant="subtitle1" sx={{ color: "#8b5e3c", fontStyle: "italic" }}>
+        <Typography
+          variant="subtitle1"
+          sx={{ color: "#8b5e3c", fontStyle: "italic" }}
+        >
           💡 {tip}
         </Typography>
       </Box>
 
-      {/* ✅ Reusable Profile Card */}
-      <ProfileCard
+      {/* ✅ Reusable Profile Card (no image upload) */}
+      <UserProfile
         profile={profile}
         form={form}
         setForm={setForm}
         saving={saving}
         handleUpdate={handleUpdate}
-        handleImageUpload={handleImageUpload}
-        handleDeleteImage={handleDeleteImage}
       />
     </Box>
   );

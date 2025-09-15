@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent, Typography, CardMedia, Box } from "@mui/material";
 
-const StatCard = ({ title, desc, icon, img, link }) => {
+const StatOverview = ({ title, desc, icon, img, link }) => {
   return (
     <Card
       elevation={3}
@@ -25,14 +25,23 @@ const StatCard = ({ title, desc, icon, img, link }) => {
           height="140"
           image={img}
           alt={title}
-          sx={{ objectFit: "cover", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
+          sx={{
+            objectFit: "cover",
+            borderTopLeftRadius: 12,
+            borderTopRightRadius: 12,
+          }}
         />
       )}
       <CardContent>
         {title && <Typography variant="h6" gutterBottom>{title}</Typography>}
         {desc && <Typography color="text.secondary">{desc}</Typography>}
         {link && (
-          <a href={link} target="_blank" rel="noopener noreferrer" style={{ color: "#b56e2a", fontWeight: "bold" }}>
+          <a
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "#b56e2a", fontWeight: "bold" }}
+          >
             Read Book
           </a>
         )}
@@ -41,4 +50,4 @@ const StatCard = ({ title, desc, icon, img, link }) => {
   );
 };
 
-export default StatCard;
+export default StatOverview;

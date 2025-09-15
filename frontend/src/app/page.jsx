@@ -1,7 +1,8 @@
 "use client";
+
 import React from "react";
 import { Container, Grid, Box, Typography, Button } from "@mui/material";
-import StatCard from "../components/StatCard";
+import StatOverview from "../components/StatOverview";
 import SavingsIcon from "@mui/icons-material/Savings";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
@@ -9,7 +10,7 @@ import SecurityIcon from "@mui/icons-material/Security";
 import InsightsIcon from "@mui/icons-material/Insights";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import { useRouter } from "next/navigation";
-
+import Footer from "../components/Footer"; // import Footer
 
 const Homepage = () => {
   const router = useRouter();
@@ -49,68 +50,74 @@ const Homepage = () => {
       img: "/assets/money.jpg",
     },
   ];
+
   return (
-    <>
-      {/* Hero Section */}
-      <Box sx={{
-        height: "100vh",
-        backgroundImage: "url('/assets/hero.jpeg')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        textAlign: "center",
-        color: "white",
-      }}>
-        <Box sx={{ backgroundColor: "rgba(0,0,0,0.6)", p: 4, borderRadius: 3 }}>
-          <Typography variant="h2" gutterBottom fontWeight="bold">Get Started. Track. Save. Grow.</Typography>
-          <Typography variant="h5" gutterBottom>Manage money wisely, visualize reports, and achieve your dreams.</Typography>
-          <Button
-  variant="contained"
-  color="secondary"
-  size="large"
-  sx={{ mt: 3 }}
-  onClick={() => router.push("/registerpage")} // <- navigate to register page
->
-  Get Started
-</Button>
-
+    <Box display="flex" flexDirection="column" minHeight="100vh">
+      {/* Page content */}
+      <Box flex={1}>
+        {/* Hero Section */}
+        <Box sx={{
+          height: "100vh",
+          backgroundImage: "url('/assets/hero.jpeg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          textAlign: "center",
+          color: "white",
+        }}>
+          <Box sx={{ backgroundColor: "rgba(0,0,0,0.6)", p: 4, borderRadius: 3 }}>
+            <Typography variant="h2" gutterBottom fontWeight="bold">Get Started. Track. Save. Grow.</Typography>
+            <Typography variant="h5" gutterBottom>Manage money wisely, visualize reports, and achieve your dreams.</Typography>
+            <Button
+              variant="contained"
+              color="secondary"
+              size="large"
+              sx={{ mt: 3 }}
+              onClick={() => router.push("/registerpage")}
+            >
+              Get Started
+            </Button>
+          </Box>
         </Box>
-      </Box>
 
-      {/* Core Features */}
-      <Container sx={{ py: 8 }}>
-        <Typography variant="h4" align="center" gutterBottom fontWeight="bold">Core Features</Typography>
-        <Grid container spacing={3} justifyContent="center">
-          {features.map((f, i) => (
-            <Grid key={i} item xs={12} sm={6} md={4}><StatCard {...f} /></Grid>
-          ))}
-        </Grid>
-      </Container>
-
-      {/* Why Finora */}
-      <Box sx={{ backgroundColor: "#6f4e37", py: 8 }}>
-        <Container>
-          <Typography variant="h4" align="center" gutterBottom fontWeight="bold">Why Finora?</Typography>
+        {/* Core Features */}
+        <Container sx={{ py: 8 }}>
+          <Typography variant="h4" align="center" gutterBottom fontWeight="bold">Core Features</Typography>
           <Grid container spacing={3} justifyContent="center">
-            {whyFinora.map((f, i) => (
-              <Grid key={i} item xs={12} sm={6} md={4}><StatCard title="" desc={f.text} icon={f.icon} /></Grid>
+            {features.map((f, i) => (
+              <Grid key={i} item xs={12} sm={6} md={4}><StatOverview {...f} /></Grid>
+            ))}
+          </Grid>
+        </Container>
+
+        {/* Why Finora */}
+        <Box sx={{ backgroundColor: "#6f4e37", py: 8 }}>
+          <Container>
+            <Typography variant="h4" align="center" gutterBottom fontWeight="bold">Why Finora?</Typography>
+            <Grid container spacing={3} justifyContent="center">
+              {whyFinora.map((f, i) => (
+                <Grid key={i} item xs={12} sm={6} md={4}><StatOverview title="" desc={f.text} icon={f.icon} /></Grid>
+              ))}
+            </Grid>
+          </Container>
+        </Box>
+
+        {/* Resources */}
+        <Container sx={{ py: 8 }}>
+          <Typography variant="h4" align="center" gutterBottom fontWeight="bold">Explore Resources</Typography>
+          <Grid container spacing={3} justifyContent="center">
+            {resources.map((f, i) => (
+              <Grid key={i} item xs={12} sm={6} md={3}><StatOverview {...f} /></Grid>
             ))}
           </Grid>
         </Container>
       </Box>
 
-      {/* Resources */}
-      <Container sx={{ py: 8 }}>
-        <Typography variant="h4" align="center" gutterBottom fontWeight="bold">Explore Resources</Typography>
-        <Grid container spacing={3} justifyContent="center">
-          {resources.map((f, i) => (
-            <Grid key={i} item xs={12} sm={6} md={3}><StatCard {...f} /></Grid>
-          ))}
-        </Grid>
-      </Container>
-    </>
+      {/* Footer only on Homepage */}
+      <Footer />
+    </Box>
   );
 };
 

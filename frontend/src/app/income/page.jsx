@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import RecordManager from "../../components/RecordManager";
+import RecordsPage from "../../components/RecordsPage";
 
 const IncomePage = () => {
-  return <RecordManager type="income" />;
+  return <RecordsPage type="income" />;
 };
 
 export default IncomePage;

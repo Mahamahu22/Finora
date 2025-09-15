@@ -11,6 +11,7 @@ import userRoutes from "./routes/user.routes.js";
 import expenseRoutes from "./routes/expense.routes.js";
 import incomeRoutes from "./routes/income.routes.js";
 import reportRoutes from "./routes/report.routes.js";
+import settingsRoutes from "./routes/settings.routes.js"; // ✅ ESM import
 import errorHandler from "./middlewares/error.js";
 
 const app = express();
@@ -34,6 +35,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/income", incomeRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/settings", settingsRoutes); // ✅ Settings API
 
 // 404 handler
 app.use("*", (req, res) => {
@@ -43,4 +45,4 @@ app.use("*", (req, res) => {
 // error handler
 app.use(errorHandler);
 
-export default app;   // ✅ ESM export
+export default app; // ✅ ESM export

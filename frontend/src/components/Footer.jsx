@@ -6,10 +6,15 @@ const Footer = () => {
   return (
     <Box
       sx={{
+        position: "fixed",
+        bottom: 0,
+        left: 0,
+        width: "100%",
         backgroundColor: "primary.main",
         color: "white",
-        py: 3,
+        py: 2,
         textAlign: "center",
+        // pushes footer down
       }}
     >
       <Typography variant="body2">

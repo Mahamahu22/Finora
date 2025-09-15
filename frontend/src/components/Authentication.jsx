@@ -52,7 +52,7 @@ const AuthForm = ({ title, fields, submitText, onSubmit }) => {
           alignItems: "center",
           justifyContent: "center",
           px: 2,
-          fontFamily: "'Poppins', sans-serif", // ✅ Better font
+          fontFamily: "'Poppins', sans-serif",
         }}
       >
         <Container
@@ -71,6 +71,7 @@ const AuthForm = ({ title, fields, submitText, onSubmit }) => {
             },
           }}
         >
+          
           {/* Title */}
           <Typography
             variant="h4"
@@ -78,7 +79,7 @@ const AuthForm = ({ title, fields, submitText, onSubmit }) => {
             sx={{
               color: "primary.main",
               fontWeight: "bold",
-              fontFamily: "'Poppins', sans-serif", // ✅ Modern font
+              fontFamily: "'Poppins', sans-serif",
               letterSpacing: "0.5px",
             }}
           >

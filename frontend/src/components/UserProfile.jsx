@@ -4,21 +4,16 @@ import {
   Card,
   Typography,
   Avatar,
-  IconButton,
   TextField,
   Button,
 } from "@mui/material";
-import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
-import CloseIcon from "@mui/icons-material/Close";
 
-export default function ProfileCard({
+export default function UserProfile({
   profile,
   form,
   setForm,
   saving,
   handleUpdate,
-  handleImageUpload,
-  handleDeleteImage,
 }) {
   return (
     <Box display="flex" justifyContent="center" px={2}>
@@ -34,9 +29,8 @@ export default function ProfileCard({
       >
         {/* Left Side */}
         <Box flex={1} bgcolor="#5d3b27" color="#fff" p={4}>
-          <Box display="flex" alignItems="center" mb={2} position="relative">
+          <Box display="flex" alignItems="center" mb={2}>
             <Avatar
-              src={profile.imagePreview || ""}
               sx={{
                 bgcolor: "#776343ff",
                 color: "#b8860b",
@@ -49,51 +43,8 @@ export default function ProfileCard({
                 boxShadow: 3,
               }}
             >
-              {!profile.imagePreview && profile.name?.charAt(0).toUpperCase()}
+              {profile.name?.charAt(0).toUpperCase()}
             </Avatar>
-
-            {/* Upload Icon */}
-            <IconButton
-              component="label"
-              sx={{
-                position: "absolute",
-                bottom: 10,
-                left: 110,
-                bgcolor: "white",
-                "&:hover": { bgcolor: "#eee" },
-                boxShadow: 2,
-              }}
-            >
-              <PhotoCameraIcon sx={{ color: "#5d3b27" }} />
-              <input
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleImageUpload(file);
-                }}
-              />
-            </IconButton>
-
-            {/* Delete Icon */}
-            {profile.imagePreview && (
-              <IconButton
-                onClick={handleDeleteImage}
-                sx={{
-                  position: "absolute",
-                  top: 10,
-                  left: 110,
-                  bgcolor: "white",
-                  "&:hover": { bgcolor: "#fdd" },
-                  boxShadow: 2,
-                  width: 28,
-                  height: 28,
-                }}
-              >
-                <CloseIcon sx={{ fontSize: 18, color: "brown" }} />
-              </IconButton>
-            )}
 
             <Box>
               <Typography variant="h6" fontWeight="bold">

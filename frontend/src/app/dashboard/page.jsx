@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Box, Typography, Grid } from "@mui/material";
 
@@ -14,16 +14,20 @@ import SettingsIcon from "@mui/icons-material/Settings";
 
 // helpers
 import api from "../../utils/api";
-import { getUser, removeUser } from "../../utils/storage";
+import { removeUser } from "../../utils/storage";
 
 // components
-import Sidebar from "../../components/SideBar"; // exact casing
-import DashboardCard from "../../components/DashboardCard";
+import Sidebar from "../../components/SideBar";
+import DashboardSummary from "../../components/DashboardSummary";
+import Footer from "../../components/Footer"; // import Footer only here
+
+import { useUser } from "../../context/UserContext";
 
 const Dashboard = () => {
   const router = useRouter();
   const pathname = usePathname();
 
+  const { user } = useUser();
   const [report, setReport] = useState({
     totalIncome: 0,
     linkedExpenses: 0,
@@ -31,15 +35,11 @@ const Dashboard = () => {
     balance: 0,
   });
 
-  const [user, setUser] = useState(null);
-
   useEffect(() => {
     const fetchSummary = async () => {
       try {
         const res = await api.get("/reports/summary");
         setReport(res.data.report ?? {});
-        const stored = getUser();
-        if (stored?.user) setUser(stored.user);
       } catch (err) {
         if (err?.response?.status === 401) {
           removeUser();
@@ -52,12 +52,20 @@ const Dashboard = () => {
     fetchSummary();
   }, [router]);
 
-  const formatINR = (num) =>
-    new Intl.NumberFormat("en-IN", {
+  const currencyCode = user?.preferences?.currency ?? "INR";
+
+  const formatMoney = useMemo(() => {
+    const locale = currencyCode === "INR" ? "en-IN" : undefined;
+    const maxFraction = currencyCode === "INR" ? 0 : 2;
+
+    const formatter = new Intl.NumberFormat(locale, {
       style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(num || 0);
+      currency: currencyCode,
+      maximumFractionDigits: maxFraction,
+    });
+
+    return (value) => formatter.format(value || 0);
+  }, [currencyCode]);
 
   const menuItems = [
     { text: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
@@ -75,19 +83,27 @@ const Dashboard = () => {
   ];
 
   return (
-    <Box display="flex" bgcolor="#ceb097ff" minHeight="100vh">
-      <Sidebar menuItems={menuItems} pathname={pathname} user={user} onNavigate={router.push} />
+    <Box display="flex" flexDirection="column" minHeight="100vh" >
+      {/* Main content wrapper */}
+      <Box display="flex" flex={1}>
+        <Sidebar menuItems={menuItems} pathname={pathname} onNavigate={(p) => router.push(p)} />
 
-      <Box flex={1} p={3}>
-        <Typography variant="h5" fontWeight="bold" mb={3}>Dashboard Overview</Typography>
-        <Grid container spacing={3} alignItems="stretch">
-          {cards.map((card, idx) => (
-            <Grid item xs={12} sm={6} md={3} key={idx} sx={{ display: "flex" }}>
-              <DashboardCard icon={card.icon} title={card.title} value={card.value} format={formatINR} />
-            </Grid>
-          ))}
-        </Grid>
+        <Box flex={1} p={3}>
+          <Typography variant="h5" fontWeight="bold" mb={3}>
+            Dashboard Overview
+          </Typography>
+          <Grid container spacing={3} alignItems="stretch">
+            {cards.map((card, idx) => (
+              <Grid item xs={12} sm={6} md={3} key={idx} sx={{ display: "flex" }}>
+                <DashboardSummary icon={card.icon} title={card.title} value={card.value} format={formatMoney} />
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
       </Box>
+
+      {/* Footer only for Dashboard */}
+      <Footer />
     </Box>
   );
 };

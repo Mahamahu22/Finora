@@ -8,11 +8,20 @@ const userSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true },
-    active: { type: Boolean, default: true }
+    active: { type: Boolean, default: true },
+
+    // ✅ Settings / Preferences
+    preferences: {
+      currency: { type: String, default: "INR" },
+      // dateFormat removed
+      theme: { type: String, enum: ["light", "dark"], default: "dark" },
+      // Removed: budgetAlert, reminderFrequency, budgetLimit
+    },
   },
   { timestamps: true }
 );
 
+// Hash password before save
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   const salt = await bcrypt.genSalt(10);
@@ -20,6 +29,7 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
+// Compare password
 userSchema.methods.comparePassword = function (plain) {
   return bcrypt.compare(plain, this.password);
 };

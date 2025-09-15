@@ -9,11 +9,11 @@ const theme = createTheme({
       main: "#f0c27b", // Light golden brown
     },
     background: {
-      default: "#7b5536ff", // Light beige background
-      paper: "#e9d9ccff",   // Slight cream for sections
+      default: "#7b5536", // Corrected 6-char hex
+      paper: "#7b5536",   // Corrected 6-char hex
     },
     text: {
-      primary: "#3e2c23",
+      primary: "#533626ff",
       secondary: "#6f4e37",
     },
   },
@@ -24,6 +24,7 @@ const theme = createTheme({
     },
     h4: {
       fontWeight: 600,
+      color: "#f0c27b", // ✅ valid hex
     },
   },
 });

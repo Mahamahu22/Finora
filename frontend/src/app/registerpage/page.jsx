@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import api from "../../utils/api";
-import AuthForm from "../../components/AuthCard";
+import Authentication from "../../components/Authentication";
 
 const RegisterPage = () => {
   const router = useRouter();
@@ -23,7 +23,7 @@ const RegisterPage = () => {
   };
 
   return (
-    <AuthForm
+    <Authentication
       title="Create Account"
       fields={["name", "email", "password"]}
       submitText="Register"

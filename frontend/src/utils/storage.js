@@ -1,19 +1,20 @@
 "use client";
 
-/** User-specific helpers */
 const USER_KEY = "user";
 
-export const saveUser = (data) => {
+export const saveUser = (user) => {
   if (typeof window !== "undefined") {
-    localStorage.setItem(USER_KEY, JSON.stringify(data));
-    window.dispatchEvent(new Event("userChange")); // 🔔 notify listeners
+    localStorage.setItem(USER_KEY, JSON.stringify({ user })); // always wrap in { user }
+    window.dispatchEvent(new Event("userChange"));
   }
 };
 
 export const getUser = () => {
   if (typeof window !== "undefined") {
     const str = localStorage.getItem(USER_KEY);
-    return str ? JSON.parse(str) : null;
+    if (!str) return null;
+    const parsed = JSON.parse(str);
+    return parsed.user || null; // always extract user
   }
   return null;
 };
@@ -21,17 +22,13 @@ export const getUser = () => {
 export const removeUser = () => {
   if (typeof window !== "undefined") {
     localStorage.removeItem(USER_KEY);
-    window.dispatchEvent(new Event("userChange")); // 🔔 notify listeners
+    window.dispatchEvent(new Event("userChange"));
   }
 };
 
-/** Generic helpers (use for expenses/incomes/reports later) */
 export const saveItem = (key, value) => {
-  if (typeof window !== "undefined") {
-    localStorage.setItem(key, JSON.stringify(value));
-  }
+  if (typeof window !== "undefined") localStorage.setItem(key, JSON.stringify(value));
 };
-
 export const getItem = (key) => {
   if (typeof window !== "undefined") {
     const str = localStorage.getItem(key);
@@ -39,16 +36,12 @@ export const getItem = (key) => {
   }
   return null;
 };
-
 export const removeItem = (key) => {
-  if (typeof window !== "undefined") {
-    localStorage.removeItem(key);
-  }
+  if (typeof window !== "undefined") localStorage.removeItem(key);
 };
-
 export const clearAll = () => {
   if (typeof window !== "undefined") {
     localStorage.clear();
-    window.dispatchEvent(new Event("userChange")); // 🔔 notify all cleared
+    window.dispatchEvent(new Event("userChange"));
   }
 };

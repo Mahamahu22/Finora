@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import api from "../../utils/api";
 import { saveUser } from "../../utils/storage";
-import AuthForm from "../../components/AuthCard";
+import AuthForm from "../../components/Authentication";
 
 const LoginPage = () => {
   const router = useRouter();
