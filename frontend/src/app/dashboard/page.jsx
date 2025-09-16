@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Box, Typography, Grid } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 // icons
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -19,15 +20,16 @@ import { removeUser } from "../../utils/storage";
 // components
 import Sidebar from "../../components/SideBar";
 import DashboardSummary from "../../components/DashboardSummary";
-import Footer from "../../components/Footer"; // import Footer only here
+import Footer from "../../components/Footer";
 
 import { useUser } from "../../context/UserContext";
 
 const Dashboard = () => {
+  const { t, ready } = useTranslation(); // ✅ use ready
   const router = useRouter();
   const pathname = usePathname();
-
   const { user } = useUser();
+
   const [report, setReport] = useState({
     totalIncome: 0,
     linkedExpenses: 0,
@@ -57,40 +59,40 @@ const Dashboard = () => {
   const formatMoney = useMemo(() => {
     const locale = currencyCode === "INR" ? "en-IN" : undefined;
     const maxFraction = currencyCode === "INR" ? 0 : 2;
-
     const formatter = new Intl.NumberFormat(locale, {
       style: "currency",
       currency: currencyCode,
       maximumFractionDigits: maxFraction,
     });
-
     return (value) => formatter.format(value || 0);
   }, [currencyCode]);
 
+  // ✅ wait for translations to be ready to avoid SSR mismatch
+  if (!ready) return null;
+
   const menuItems = [
-    { text: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
-    { text: "Income", icon: <AttachMoneyIcon />, path: "/income" },
-    { text: "Expenses", icon: <MoneyOffIcon />, path: "/expenses" },
-    { text: "Reports", icon: <AssessmentIcon />, path: "/reports" },
-    { text: "Settings", icon: <SettingsIcon />, path: "/settings" },
+    { text: t("dashboard"), icon: <DashboardIcon />, path: "/dashboard" },
+    { text: t("income"), icon: <AttachMoneyIcon />, path: "/income" },
+    { text: t("expenses"), icon: <MoneyOffIcon />, path: "/expenses" },
+    { text: t("reports"), icon: <AssessmentIcon />, path: "/reports" },
+    { text: t("settings"), icon: <SettingsIcon />, path: "/settings" },
   ];
 
   const cards = [
-    { icon: <AttachMoneyIcon color="success" fontSize="large" />, title: "Total Income", value: report.totalIncome },
-    { icon: <MoneyOffIcon color="error" fontSize="large" />, title: "Linked Expenses", value: report.linkedExpenses },
-    { icon: <SavingsIcon color="primary" fontSize="large" />, title: "General Expenses", value: report.generalExpenses },
-    { icon: <AssessmentIcon color="secondary" fontSize="large" />, title: "Balance Amount", value: report.balance },
+    { icon: <AttachMoneyIcon color="success" fontSize="large" />, title: t("totalIncome"), value: report.totalIncome },
+    { icon: <MoneyOffIcon color="error" fontSize="large" />, title: t("linkedExpenses"), value: report.linkedExpenses },
+    { icon: <SavingsIcon color="primary" fontSize="large" />, title: t("generalExpenses"), value: report.generalExpenses },
+    { icon: <AssessmentIcon color="secondary" fontSize="large" />, title: t("balanceAmount"), value: report.balance },
   ];
 
   return (
-    <Box display="flex" flexDirection="column" minHeight="100vh" >
-      {/* Main content wrapper */}
+    <Box display="flex" flexDirection="column" minHeight="100vh">
       <Box display="flex" flex={1}>
         <Sidebar menuItems={menuItems} pathname={pathname} onNavigate={(p) => router.push(p)} />
 
         <Box flex={1} p={3}>
           <Typography variant="h5" fontWeight="bold" mb={3}>
-            Dashboard Overview
+            {t("dashboardOverview")}
           </Typography>
           <Grid container spacing={3} alignItems="stretch">
             {cards.map((card, idx) => (
@@ -102,7 +104,6 @@ const Dashboard = () => {
         </Box>
       </Box>
 
-      {/* Footer only for Dashboard */}
       <Footer />
     </Box>
   );

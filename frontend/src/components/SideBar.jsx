@@ -29,6 +29,7 @@ const Sidebar = ({ menuItems = [], pathname = "/", onNavigate = () => {} }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  // ✅ Ensure this component only renders on client
   useEffect(() => setMounted(true), []);
 
   const unwrapUser = (u) => {
@@ -50,7 +51,8 @@ const Sidebar = ({ menuItems = [], pathname = "/", onNavigate = () => {} }) => {
     : "";
   const initial = displayName ? displayName.trim().charAt(0).toUpperCase() : "U";
 
-  const drawerContent = (
+  // Don't render menu until client to avoid hydration mismatch
+  const drawerContent = mounted && (
     <Box
       sx={{
         height: "100%",
@@ -128,7 +130,7 @@ const Sidebar = ({ menuItems = [], pathname = "/", onNavigate = () => {} }) => {
             fontWeight: "bold",
           }}
         >
-          {mounted ? initial : null}
+          {initial}
         </Avatar>
         <Box>
           <Typography
@@ -141,7 +143,7 @@ const Sidebar = ({ menuItems = [], pathname = "/", onNavigate = () => {} }) => {
               fontFamily: "'Roboto', sans-serif",
             }}
           >
-            {mounted ? displayName || "User" : "User"}
+            {displayName || "User"}
           </Typography>
         </Box>
       </Box>
@@ -150,7 +152,7 @@ const Sidebar = ({ menuItems = [], pathname = "/", onNavigate = () => {} }) => {
 
   return (
     <>
-      {isMobile && !mobileOpen && (
+      {isMobile && !mobileOpen && mounted && (
         <IconButton
           onClick={() => setMobileOpen(true)}
           sx={{

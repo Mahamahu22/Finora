@@ -28,11 +28,15 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import DashboardIcon from "@mui/icons-material/Dashboard";
+import TranslateIcon from "@mui/icons-material/Translate";
 
 import Sidebar from "../../components/SideBar";
 import CustomButton from "../../components/common/Button";
 import { useThemeContext } from "../../context/ThemeContext";
 import { useUser } from "../../context/UserContext";
+
+import { useTranslation } from "react-i18next";
+import "../../i18n"; // i18n configuration
 
 const currencyOptions = [
   { code: "INR", label: "₹ INR" },
@@ -41,15 +45,23 @@ const currencyOptions = [
   { code: "GBP", label: "£ GBP" },
 ];
 
+const languageOptions = [
+  { code: "en", label: "English" },
+  { code: "ta", label: "தமிழ்" },
+];
+
 export default function SettingsPage() {
+  const { t, i18n, ready } = useTranslation();
   const router = useRouter();
   const pathname = usePathname();
   const theme = useTheme();
   const { mode: themeMode, toggleTheme } = useThemeContext();
   const { user, updatePreferences, changePassword } = useUser();
 
+  // ✅ all states must be at top
+  const [mounted, setMounted] = useState(false);
   const [currency, setCurrency] = useState("INR");
-
+  const [language, setLanguage] = useState("en");
   const [openPwd, setOpenPwd] = useState(false);
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -62,48 +74,55 @@ export default function SettingsPage() {
     message: "",
   });
 
+  useEffect(() => setMounted(true), []);
+
   const menuItems = [
-    { text: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
-    { text: "Settings", icon: <SettingsIcon />, path: "/settings" },
+    { text: t("dashboard"), icon: <DashboardIcon />, path: "/dashboard" },
+    { text: t("settings"), icon: <SettingsIcon />, path: "/settings" },
   ];
 
+  // Load saved preferences
   useEffect(() => {
-    const prefs = user?.preferences || {};
-    if (prefs.currency) setCurrency(prefs.currency);
-  }, [user]);
+    if (user?.preferences) {
+      if (user.preferences.currency) setCurrency(user.preferences.currency);
+      if (user.preferences.language) {
+        setLanguage(user.preferences.language);
+        i18n.changeLanguage(user.preferences.language);
+      }
+    }
+  }, [user, i18n]);
+
+  // Change language instantly
+  useEffect(() => {
+    if (ready) {
+      i18n.changeLanguage(language);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("language", language);
+      }
+    }
+  }, [language, i18n, ready]);
 
   const handleSave = async () => {
     try {
       setLoading(true);
-      const payload = { currency, theme: themeMode };
-
+      const payload = { currency, theme: themeMode, language };
       const result = await updatePreferences(payload);
-      if (result.success) {
-        setSnack({
-          open: true,
-          severity: "success",
-          message: "Preferences saved successfully",
-        });
-      } else {
-        throw result.error || new Error("Failed to update preferences");
-      }
-    } catch (err) {
-      console.error(err);
+      setSnack({
+        open: true,
+        severity: result.success ? "success" : "error",
+        message: result.success
+          ? t("savePreferences")
+          : t("Failed to save preferences"),
+      });
+    } catch {
       setSnack({
         open: true,
         severity: "error",
-        message: err?.message || "Failed to save preferences",
+        message: t("Failed to save preferences"),
       });
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleOpenChangePassword = () => setOpenPwd(true);
-  const handleCloseChangePassword = () => {
-    setOpenPwd(false);
-    setOldPassword("");
-    setNewPassword("");
   };
 
   const handleChangePassword = async () => {
@@ -111,50 +130,36 @@ export default function SettingsPage() {
       setSnack({
         open: true,
         severity: "error",
-        message: "Both fields are required",
+        message: t("Both fields are required"),
       });
       return;
     }
-
     try {
       setLoading(true);
       await changePassword({ oldPassword, newPassword });
       setSnack({
         open: true,
         severity: "success",
-        message: "Password updated successfully",
+        message: t("Password updated successfully"),
       });
-      handleCloseChangePassword();
-    } catch (err) {
-      console.error(err);
-      if (err?.response) {
-        const { status, data } = err.response;
-        if (status === 400 && data?.error === "incorrect_old_password") {
-          setSnack({
-            open: true,
-            severity: "error",
-            message: "Old password is incorrect",
-          });
-        } else if (status === 400 && data?.error) {
-          setSnack({ open: true, severity: "error", message: data.error });
-        } else {
-          setSnack({
-            open: true,
-            severity: "error",
-            message: "Failed to update password",
-          });
-        }
-      } else {
-        setSnack({
-          open: true,
-          severity: "error",
-          message: "Failed to update password",
-        });
-      }
+      setOpenPwd(false);
+      setOldPassword("");
+      setNewPassword("");
+    } catch {
+      setSnack({
+        open: true,
+        severity: "error",
+        message: t("Failed to update password"),
+      });
     } finally {
       setLoading(false);
     }
   };
+
+  // ✅ Instead of returning early → render placeholder
+  if (!mounted || !ready) {
+    return <Box sx={{ minHeight: "100vh" }} />;
+  }
 
   return (
     <Box
@@ -173,55 +178,41 @@ export default function SettingsPage() {
 
       <Box flex={1} p={4}>
         <Typography variant="h4" mb={3}>
-          Settings
+          {t("settings")}
         </Typography>
 
         {/* Account Section */}
-        <Paper
-          sx={{
-            mb: 3,
-            p: 3,
-            backgroundColor: theme.palette.background.paper,
-            color: theme.palette.text.primary,
-          }}
-        >
+        <Paper sx={{ mb: 3, p: 3, backgroundColor: theme.palette.background.paper }}>
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Box display="flex" alignItems="center" gap={1}>
               <AccountCircleIcon />
-              <Typography fontWeight="700">Account</Typography>
+              <Typography fontWeight="700">{t("account")}</Typography>
             </Box>
             <Box>
               <CustomButton
                 variant="secondary"
-                onClick={handleOpenChangePassword}
+                onClick={() => setOpenPwd(true)}
                 sx={{ mr: 1 }}
               >
-                Change Password
+                {t("changePassword")}
               </CustomButton>
             </Box>
           </Box>
         </Paper>
 
         {/* Preferences Section */}
-        <Paper
-          sx={{
-            mb: 3,
-            p: 4,
-            backgroundColor: theme.palette.background.paper,
-            color: theme.palette.text.primary,
-          }}
-        >
+        <Paper sx={{ mb: 3, p: 4, backgroundColor: theme.palette.background.paper }}>
           <Box display="flex" alignItems="center" gap={1} mb={2}>
             <SettingsIcon />
             <Typography variant="h6" fontWeight={700}>
-              Preferences
+              {t("preferences")}
             </Typography>
           </Box>
 
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
-                <InputLabel>Currency</InputLabel>
+                <InputLabel>{t("currency")}</InputLabel>
                 <Select
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
@@ -243,7 +234,7 @@ export default function SettingsPage() {
               alignItems="center"
               justifyContent="flex-end"
             >
-              <Typography sx={{ mr: 1 }}>Theme</Typography>
+              <Typography sx={{ mr: 1 }}>{t("themeLightDark")}</Typography>
               <FormControlLabel
                 control={
                   <Switch
@@ -255,26 +246,48 @@ export default function SettingsPage() {
                     }}
                   />
                 }
-                label={themeMode === "dark" ? "Dark" : "Light"}
+                label={themeMode === "dark" ? t("Dark") : t("Light")}
               />
             </Grid>
           </Grid>
-
-          <Box mt={3} display="flex" justifyContent="flex-end">
-            <CustomButton onClick={handleSave} disabled={loading}>
-              Save Preferences
-            </CustomButton>
-          </Box>
         </Paper>
+
+        {/* Language Section */}
+        <Paper sx={{ mb: 3, p: 4, backgroundColor: theme.palette.background.paper }}>
+          <Box display="flex" alignItems="center" gap={1} mb={2}>
+            <TranslateIcon />
+            <Typography variant="h6" fontWeight={700}>
+              {t("language")}
+            </Typography>
+          </Box>
+
+          <FormControl fullWidth>
+            <InputLabel>{t("language")}</InputLabel>
+            <Select value={language} onChange={(e) => setLanguage(e.target.value)}>
+              {languageOptions.map((lang) => (
+                <MenuItem key={lang.code} value={lang.code}>
+                  {lang.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Paper>
+
+        {/* Save Button */}
+        <Box mt={3} display="flex" justifyContent="flex-end">
+          <CustomButton onClick={handleSave} disabled={loading}>
+            {t("savePreferences")}
+          </CustomButton>
+        </Box>
       </Box>
 
       {/* Change Password Dialog */}
-      <Dialog open={openPwd} onClose={handleCloseChangePassword}>
-        <DialogTitle>Change Password</DialogTitle>
+      <Dialog open={openPwd} onClose={() => setOpenPwd(false)}>
+        <DialogTitle>{t("changePassword")}</DialogTitle>
         <DialogContent>
           <OutlinedInput
             type={showOldPassword ? "text" : "password"}
-            placeholder="Old Password"
+            placeholder={t("Old Password")}
             fullWidth
             value={oldPassword}
             onChange={(e) => setOldPassword(e.target.value)}
@@ -289,7 +302,7 @@ export default function SettingsPage() {
           />
           <OutlinedInput
             type={showNewPassword ? "text" : "password"}
-            placeholder="New Password"
+            placeholder={t("New Password")}
             fullWidth
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
@@ -304,11 +317,11 @@ export default function SettingsPage() {
           />
         </DialogContent>
         <DialogActions>
-          <CustomButton variant="secondary" onClick={handleCloseChangePassword}>
-            Cancel
+          <CustomButton variant="secondary" onClick={() => setOpenPwd(false)}>
+            {t("cancel")}
           </CustomButton>
           <CustomButton onClick={handleChangePassword} disabled={loading}>
-            Update
+            {t("update")}
           </CustomButton>
         </DialogActions>
       </Dialog>

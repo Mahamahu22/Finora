@@ -2,21 +2,23 @@ const Expense = require("../models/Expense");
 const mongoose = require("mongoose");
 const Income = require("../models/Income");
 
-// 🔹 small helper: normalize output
+// 🔹 format function unchanged
 const formatExpense = (doc, incomeDoc = null) => {
   if (!doc) return null;
   return {
-    id: doc.id,                        // your UUID
+    id: doc.id,
     amount: doc.amount,
-    category: doc.category,
+    category: doc.category,   // now free string
     note: doc.note,
     date: doc.date,
     active: doc.active,
-    income: incomeDoc ? {
-      id: incomeDoc.id,
-      source: incomeDoc.source,
-      amount: incomeDoc.amount,
-    } : null,
+    income: incomeDoc
+      ? {
+          id: incomeDoc.id,
+          source: incomeDoc.source,
+          amount: incomeDoc.amount,
+        }
+      : null,
     user: {
       id: doc.userId,
       email: doc.userEmail,

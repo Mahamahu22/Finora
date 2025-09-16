@@ -1,4 +1,4 @@
-"use client";
+      "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -37,8 +37,9 @@ import api from "../utils/api";
 import { removeUser } from "../utils/storage";
 import Sidebar from "../components/SideBar";
 import { useUser } from "../context/UserContext";
+import { useTranslation } from "react-i18next";
 
-const EXPENSE_CATEGORIES = [
+const DEFAULT_EXPENSE_CATEGORIES = [
   "Food",
   "Transport",
   "Shopping",
@@ -48,20 +49,20 @@ const EXPENSE_CATEGORIES = [
   "Entertainment",
   "Other",
 ];
-const INCOME_SOURCES = ["Salary", "Business", "Freelance", "Gift", "Other"];
-
+const DEFAULT_INCOME_SOURCES = ["Salary", "Business", "Freelance", "Gift", "Other"];
 const DEFAULT_CURRENCY = "INR";
 
 const RecordManager = ({ type = "income" }) => {
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useUser();
+  const { t } = useTranslation(); // translation hook
 
   const [records, setRecords] = useState([]);
   const [linkedIncomes, setLinkedIncomes] = useState([]);
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState(null); // id when editing
-  const [originalForm, setOriginalForm] = useState(null); // used to detect changes
+  const [editing, setEditing] = useState(null);
+  const [originalForm, setOriginalForm] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
 
@@ -86,17 +87,29 @@ const RecordManager = ({ type = "income" }) => {
     incomeId: "",
   });
 
+  const [expenseCategories, setExpenseCategories] = useState(DEFAULT_EXPENSE_CATEGORIES);
+  const [incomeSources, setIncomeSources] = useState(DEFAULT_INCOME_SOURCES);
+  const [newCategory, setNewCategory] = useState("");
+  const [newSource, setNewSource] = useState("");
+
+  const [isClient, setIsClient] = useState(false); // ⚡ hydration fix
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const menuItems = [
-    { text: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
-    { text: "Income", icon: <AttachMoneyIcon />, path: "/income" },
-    { text: "Expenses", icon: <MoneyOffIcon />, path: "/expenses" },
-    { text: "Reports", icon: <AssessmentIcon />, path: "/reports" },
-    { text: "Settings", icon: <SettingsIcon />, path: "/settings" },
+    { text: t("dashboard"), icon: <DashboardIcon />, path: "/dashboard" },
+    { text: t("income"), icon: <AttachMoneyIcon />, path: "/income" },
+    { text: t("expenses"), icon: <MoneyOffIcon />, path: "/expenses" },
+    { text: t("reports"), icon: <AssessmentIcon />, path: "/reports" },
+    { text: t("settings"), icon: <SettingsIcon />, path: "/settings" },
   ];
 
   const currencyCode = user?.preferences?.currency ?? DEFAULT_CURRENCY;
 
   const formatter = useMemo(() => {
+    if (!isClient) return (val) => val; // skip formatting on SSR
     const locale = currencyCode === "INR" ? "en-IN" : undefined;
     const maximumFractionDigits = currencyCode === "INR" ? 0 : 2;
     const nf = new Intl.NumberFormat(locale, {
@@ -105,30 +118,24 @@ const RecordManager = ({ type = "income" }) => {
       maximumFractionDigits,
     });
     return (value) => nf.format(Number(value || 0));
-  }, [currencyCode]);
+  }, [currencyCode, isClient]);
 
-  // Detect user locale for date display
-  const userLocale = typeof navigator !== "undefined" ? navigator.language : "en-GB";
+  const userLocale = isClient ? navigator.language : "en-GB";
   const isUSLocale = userLocale === "en-US";
 
   const formatDisplayDate = (dateStr) => {
-    if (!dateStr) return "-";
+    if (!dateStr || !isClient) return "-";
     const date = new Date(dateStr);
     if (isNaN(date)) return "-";
     const options = { year: "numeric", month: "2-digit", day: "2-digit" };
     return date.toLocaleDateString(isUSLocale ? "en-US" : "en-GB", options);
   };
 
-  const parseInputDate = (inputDate) => {
-    // inputDate is YYYY-MM-DD from input[type=date]
-    return inputDate;
-  };
+  const parseInputDate = (inputDate) => inputDate;
 
-  // Fetch records and linked incomes
   useEffect(() => {
     fetchRecords(page, rowsPerPage);
     if (type === "expense") fetchLinkedIncomes();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, rowsPerPage, type, user]);
 
   const fetchRecords = async (pageNum = 0, limitNum = rowsPerPage) => {
@@ -180,8 +187,7 @@ const RecordManager = ({ type = "income" }) => {
     }
   };
 
-  const handleChange = (e) =>
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  const handleChange = (e) => setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
   const normalizeForm = (f) => ({
     amount: String(Number(f.amount || 0)),
@@ -196,21 +202,21 @@ const RecordManager = ({ type = "income" }) => {
     try {
       const amountNum = Number(form.amount);
       if (!form.amount || Number.isNaN(amountNum) || amountNum <= 0) {
-        setSnackbar({ open: true, message: "Amount is required and must be > 0", severity: "warning" });
+        setSnackbar({ open: true, message: t("amountRequired"), severity: "warning" });
         return;
       }
       if (type === "income" && (!form.source || form.source.trim() === "")) {
-        setSnackbar({ open: true, message: "Source is required", severity: "warning" });
+        setSnackbar({ open: true, message: t("sourceRequired"), severity: "warning" });
         return;
       }
       if (type === "expense" && (!form.category || form.category.trim() === "")) {
-        setSnackbar({ open: true, message: "Category is required", severity: "warning" });
+        setSnackbar({ open: true, message: t("categoryRequired"), severity: "warning" });
         return;
       }
 
       if (editing && originalForm) {
         if (JSON.stringify(normalizeForm(originalForm)) === JSON.stringify(normalizeForm(form))) {
-          setSnackbar({ open: true, message: "No changes to save", severity: "info" });
+          setSnackbar({ open: true, message: t("noChanges"), severity: "info" });
           setOpen(false);
           setEditing(null);
           setOriginalForm(null);
@@ -234,14 +240,18 @@ const RecordManager = ({ type = "income" }) => {
       if (editing) await api.put(`${endpoint}/${editing}`, payload);
       else await api.post(endpoint, payload);
 
-      setSnackbar({ open: true, message: `${type} ${editing ? "updated" : "added"} successfully!`, severity: "success" });
+      setSnackbar({ open: true, message: t("savedSuccessfully", { type: type }), severity: "success" });
       await fetchRecords(page, rowsPerPage);
       setOpen(false);
       setEditing(null);
       setOriginalForm(null);
     } catch (err) {
       console.error("Error saving record:", err);
-      setSnackbar({ open: true, message: err?.response?.data?.message || `Failed to save ${type}!`, severity: "error" });
+      setSnackbar({
+        open: true,
+        message: err?.response?.data?.message || t("saveFailed", { type: type }),
+        severity: "error",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -256,7 +266,7 @@ const RecordManager = ({ type = "income" }) => {
     try {
       const endpoint = type === "income" ? "/income" : "/expenses";
       await api.delete(`${endpoint}/${deleteId}`);
-      setSnackbar({ open: true, message: `${type} deleted successfully!`, severity: "success" });
+      setSnackbar({ open: true, message: t("deleteRecordConfirmation", { type: type }), severity: "success" });
       await fetchRecords(page, rowsPerPage);
     } catch (err) {
       console.error("Error deleting record:", err);
@@ -302,6 +312,27 @@ const RecordManager = ({ type = "income" }) => {
     setOriginalForm(null);
   };
 
+  const handleAddSource = () => {
+    const trimmed = newSource.trim();
+    if (trimmed !== "" && !incomeSources.includes(trimmed)) {
+      setIncomeSources([...incomeSources, trimmed]);
+      setForm((prev) => ({ ...prev, source: trimmed }));
+      setNewSource("");
+    }
+  };
+
+  const handleAddCategory = () => {
+    const trimmed = newCategory.trim();
+    if (trimmed !== "" && !expenseCategories.includes(trimmed)) {
+      setExpenseCategories([...expenseCategories, trimmed]);
+      setForm((prev) => ({ ...prev, category: trimmed }));
+      setNewCategory("");
+    }
+  };
+
+  // 💡 Only render the table and translations on client
+  if (!isClient) return null;
+
   return (
     <Box display="flex" minHeight="100vh">
       <Sidebar menuItems={menuItems} pathname={pathname} user={user} onNavigate={(path) => router.push(path)} />
@@ -309,18 +340,19 @@ const RecordManager = ({ type = "income" }) => {
       <Box flex={1} p={3}>
         {/* Header */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-          <Typography variant="h5" sx={{  fontWeight: "bold" }}>
-            {type === "income" ? "Income Overview" : "Expense Overview"}
+          <Typography variant="h5" sx={{ fontWeight: "bold" }}>
+            {type === "income" ? t("incomeOverview") : t("expenseOverview")}
           </Typography>
           <Button variant="contained" startIcon={<Add />} onClick={() => handleOpen()} sx={{ bgcolor: "#6b4226", "&:hover": { bgcolor: "#8d6e63" } }}>
-            Add {type === "income" ? "Income" : "Expense"}
+            {type === "income" ? t("addIncome") : t("addExpense")}
           </Button>
         </Box>
 
+        {/* Card & Table */}
         <Card sx={{ borderRadius: 2, boxShadow: 3 }}>
           <CardContent>
             <Typography variant="h6" sx={{ mb: 2 }}>
-              {type === "income" ? "Income Records" : "Expense Records"}
+              {type === "income" ? t("incomeRecords") : t("expenseRecords")}
             </Typography>
 
             {loading ? (
@@ -328,30 +360,30 @@ const RecordManager = ({ type = "income" }) => {
                 <CircularProgress />
               </Box>
             ) : records.length === 0 ? (
-              <Typography color="text.secondary">No {type} records yet.</Typography>
+              <Typography color="text.secondary">{t("noRecordsYet", { type })}</Typography>
             ) : (
               <>
                 <Table>
                   <TableHead>
                     <TableRow sx={{ bgcolor: "#6b4226" }}>
-                      <TableCell sx={{ color: "white" }}>Date</TableCell>
+                      <TableCell sx={{ color: "white" }}>{t("date")}</TableCell>
                       {type === "income" ? (
                         <>
-                          <TableCell sx={{ color: "white" }}>Source</TableCell>
-                          <TableCell sx={{ color: "white" }}>Amount</TableCell>
-                          <TableCell sx={{ color: "white" }}>Expenses</TableCell>
-                          <TableCell sx={{ color: "white" }}>Remaining</TableCell>
-                          <TableCell sx={{ color: "white" }}>Note</TableCell>
+                          <TableCell sx={{ color: "white" }}>{t("source")}</TableCell>
+                          <TableCell sx={{ color: "white" }}>{t("amount")}</TableCell>
+                          <TableCell sx={{ color: "white" }}>{t("linkedExpenses")}</TableCell>
+                          <TableCell sx={{ color: "white" }}>{t("remaining")}</TableCell>
+                          <TableCell sx={{ color: "white" }}>{t("note")}</TableCell>
                         </>
                       ) : (
                         <>
-                          <TableCell sx={{ color: "white" }}>Category</TableCell>
-                          <TableCell sx={{ color: "white" }}>Amount</TableCell>
-                          <TableCell sx={{ color: "white" }}>Linked Income</TableCell>
-                          <TableCell sx={{ color: "white" }}>Note</TableCell>
+                          <TableCell sx={{ color: "white" }}>{t("category")}</TableCell>
+                          <TableCell sx={{ color: "white" }}>{t("amount")}</TableCell>
+                          <TableCell sx={{ color: "white" }}>{t("linkedIncome")}</TableCell>
+                          <TableCell sx={{ color: "white" }}>{t("note")}</TableCell>
                         </>
                       )}
-                      <TableCell sx={{ color: "white" }}>Actions</TableCell>
+                      <TableCell sx={{ color: "white" }}>{t("actions")}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -409,12 +441,15 @@ const RecordManager = ({ type = "income" }) => {
           </CardContent>
         </Card>
 
+        
+
+
         {/* Dialog */}
         <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-          <DialogTitle sx={{ bgcolor: "#f0c27b", color: "#6b4226" }}>{editing ? `Edit ${type}` : `Add New ${type}`}</DialogTitle>
+          <DialogTitle sx={{ bgcolor: "#f0c27b", color: "#6b4226" }}>{editing ? t("edit") + " " + t(type) : t("addNew" + type.charAt(0).toUpperCase() + type.slice(1))}</DialogTitle>
           <DialogContent>
             <TextField
-              label="Amount (required number)"
+              label={t("amount")}
               name="amount"
               type="number"
               value={form.amount}
@@ -426,28 +461,39 @@ const RecordManager = ({ type = "income" }) => {
             />
 
             {type === "income" ? (
-              <TextField
-                select
-                label="Source"
-                name="source"
-                value={form.source}
-                onChange={handleChange}
-                fullWidth
-                margin="normal"
-                required
-              >
-                <MenuItem value="">-- Select --</MenuItem>
-                {INCOME_SOURCES.map((src) => (
-                  <MenuItem key={src} value={src}>
-                    {src}
-                  </MenuItem>
-                ))}
-              </TextField>
+              <>
+                <TextField
+                  select
+                  label={t("source")}
+                  name="source"
+                  value={form.source}
+                  onChange={handleChange}
+                  fullWidth
+                  margin="normal"
+                  required
+                >
+                  <MenuItem value="">{t("select")}</MenuItem>
+                  {incomeSources.map((src) => (
+                    <MenuItem key={src} value={src}>
+                      {src}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <Box display="flex" gap={1} alignItems="center" mt={1}>
+                  <TextField
+                    label={t("addSource")}
+                    value={newSource}
+                    onChange={(e) => setNewSource(e.target.value)}
+                    size="small"
+                  />
+                  <Button onClick={handleAddSource} variant="outlined">{t("add")}</Button>
+                </Box>
+              </>
             ) : (
               <>
                 <TextField
                   select
-                  label="Category"
+                  label={t("category")}
                   name="category"
                   value={form.category}
                   onChange={handleChange}
@@ -455,37 +501,46 @@ const RecordManager = ({ type = "income" }) => {
                   margin="normal"
                   required
                 >
-                  <MenuItem value="">-- Select --</MenuItem>
-                  {EXPENSE_CATEGORIES.map((cat) => (
+                  <MenuItem value="">{t("select")}</MenuItem>
+                  {expenseCategories.map((cat) => (
                     <MenuItem key={cat} value={cat}>
                       {cat}
                     </MenuItem>
                   ))}
                 </TextField>
+                <Box display="flex" gap={1} alignItems="center" mt={1}>
+                  <TextField
+                    label={t("addCategory")}
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value)}
+                    size="small"
+                  />
+                  <Button onClick={handleAddCategory} variant="outlined">{t("add")}</Button>
+                </Box>
 
                 <TextField
                   select
-                  label="Linked Income (optional)"
+                  label={t("linkedIncome")}
                   name="incomeId"
                   value={form.incomeId}
                   onChange={handleChange}
                   fullWidth
                   margin="normal"
                 >
-                  <MenuItem value="">None</MenuItem>
+                  <MenuItem value="">{t("none")}</MenuItem>
                   {linkedIncomes.length > 0
                     ? linkedIncomes.map((inc) => (
                         <MenuItem key={inc.id} value={inc.id}>
                           {inc.source} - {formatter(inc.amount)} (Remaining: {formatter(inc.remaining)})
                         </MenuItem>
                       ))
-                    : <MenuItem disabled>No incomes available</MenuItem>}
+                    : <MenuItem disabled>{t("noIncomesAvailable")}</MenuItem>}
                 </TextField>
               </>
             )}
 
             <TextField
-              label="Note (optional)"
+              label={t("note")}
               name="note"
               value={form.note}
               onChange={handleChange}
@@ -494,7 +549,7 @@ const RecordManager = ({ type = "income" }) => {
             />
 
             <TextField
-              label="Date(MM-DD-YYYY)"
+              label={t("date")}
               name="date"
               type="date"
               value={form.date}
@@ -506,24 +561,24 @@ const RecordManager = ({ type = "income" }) => {
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose} sx={{ color: "#6b4226" }} disabled={isSaving}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button onClick={handleSave} variant="contained" sx={{ bgcolor: "#6b4226" }} disabled={isSaving}>
-              {isSaving ? "Saving..." : `Save ${type === "income" ? "Income" : "Expense"}`}
+              {isSaving ? t("saving") : t("save" + type.charAt(0).toUpperCase() + type.slice(1))}
             </Button>
           </DialogActions>
         </Dialog>
 
         {/* Confirm Delete */}
         <Dialog open={deleteConfirm} onClose={() => setDeleteConfirm(false)}>
-          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogTitle>{t("confirmDelete")}</DialogTitle>
           <DialogContent>
-            <Typography>Are you sure you want to delete this {type} record?</Typography>
+            <Typography>{t("deleteRecordConfirmation", { type })}</Typography>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDeleteConfirm(false)}>Cancel</Button>
+            <Button onClick={() => setDeleteConfirm(false)}>{t("cancel")}</Button>
             <Button onClick={handleDelete} color="error" variant="contained">
-              Delete
+              {t("delete")}
             </Button>
           </DialogActions>
         </Dialog>

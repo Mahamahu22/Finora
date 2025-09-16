@@ -1,20 +1,20 @@
 const mongoose = require("mongoose");
 const Income = require("../models/Income");
 const Expense = require("../models/Expense");
+const { INCOME_SOURCES } = require("../constants");
 
 // 👉 Format income with expenses + remaining
 const formatIncomeWithExpenses = async (income, userId) => {
-  // find total expenses linked to this income
   const expensesData = await Expense.aggregate([
-    { $match: { incomeId: income.id, userId } }, // ⚠️ make sure Income model has "id" (UUID)
+    { $match: { incomeId: income.id, userId } },
     { $group: { _id: null, totalExpenses: { $sum: "$amount" } } },
   ]);
 
   const totalExpenses = expensesData[0]?.totalExpenses || 0;
 
   return {
-    id: income.id, // UUID field (if exists)
-    _id: income._id, // MongoDB ObjectId (always exists)
+    id: income.id,
+    _id: income._id,
     amount: income.amount,
     source: income.source,
     note: income.note,
@@ -31,9 +31,16 @@ const formatIncomeWithExpenses = async (income, userId) => {
   };
 };
 
-// 👉 Create Income
+// 👉 Create Income (auto-add source if not in list)
 exports.create = async (req, res) => {
   try {
+    let { source } = req.body;
+
+    // If new source, push to INCOME_SOURCES in-memory list
+    if (source && !INCOME_SOURCES.includes(source)) {
+      INCOME_SOURCES.push(source);
+    }
+
     const doc = await Income.create({
       ...req.body,
       userId: req.user.id,
@@ -46,6 +53,7 @@ exports.create = async (req, res) => {
       status: "success",
       message: "Income created successfully",
       income: formatted,
+      sources: INCOME_SOURCES, // send updated dropdown
     });
   } catch (error) {
     res.status(400).json({ status: "error", message: error.message });
@@ -74,6 +82,7 @@ exports.list = async (req, res) => {
       status: "success",
       message: "Income list with expenses calculated",
       items: result,
+      sources: INCOME_SOURCES, // include dropdown values
       pagination: {
         total,
         page: Number(page),
@@ -90,7 +99,7 @@ const findByIdOrUUID = async (id, userId) => {
   if (mongoose.Types.ObjectId.isValid(id)) {
     return Income.findOne({ _id: id, userId });
   } else {
-    return Income.findOne({ id, userId }); // assumes "id" is UUID field
+    return Income.findOne({ id, userId });
   }
 };
 
@@ -107,6 +116,7 @@ exports.getOne = async (req, res) => {
       status: "success",
       message: "Income retrieved successfully",
       income: formatted,
+      sources: INCOME_SOURCES,
     });
   } catch (error) {
     res.status(500).json({ status: "error", message: error.message });
@@ -116,6 +126,11 @@ exports.getOne = async (req, res) => {
 // 👉 Update Income
 exports.update = async (req, res) => {
   try {
+    let { source } = req.body;
+    if (source && !INCOME_SOURCES.includes(source)) {
+      INCOME_SOURCES.push(source);
+    }
+
     let doc;
     if (mongoose.Types.ObjectId.isValid(req.params.id)) {
       doc = await Income.findOneAndUpdate(
@@ -140,6 +155,7 @@ exports.update = async (req, res) => {
       status: "success",
       message: "Income updated successfully",
       income: formatted,
+      sources: INCOME_SOURCES,
     });
   } catch (error) {
     res.status(500).json({ status: "error", message: error.message });
@@ -173,6 +189,7 @@ exports.remove = async (req, res) => {
       status: "success",
       message: "Income deleted successfully",
       income: formatted,
+      sources: INCOME_SOURCES,
     });
   } catch (error) {
     res.status(500).json({ status: "error", message: error.message });

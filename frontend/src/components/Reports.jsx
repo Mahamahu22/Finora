@@ -1,10 +1,22 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Table, TableHead, TableRow, TableCell, TableBody, Card, CardContent, Typography, CircularProgress, Box } from "@mui/material";
+import {
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  Card,
+  CardContent,
+  Typography,
+  CircularProgress,
+  Box,
+} from "@mui/material";
 import api from "../utils/api";
 import dayjs from "dayjs";
+import { useTranslation } from "react-i18next"; // assuming react-i18next setup
 
-// ✅ helper to format date as dd.mm.yyyy
+// helper to format date as dd.mm.yyyy
 const formatDateDMY = (dateString) => {
   if (!dateString) return "-";
   const d = new Date(dateString);
@@ -15,6 +27,7 @@ const formatDateDMY = (dateString) => {
 };
 
 const Reports = ({ type, data, exportScope, startDate, endDate, formatter }) => {
+  const { t } = useTranslation(); // translation function
   const [exportData, setExportData] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -55,7 +68,6 @@ const Reports = ({ type, data, exportScope, startDate, endDate, formatter }) => 
     };
   }, [exportScope, startDate, endDate]);
 
-  // Show loading for export table
   if (exportScope && loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" sx={{ py: 4 }}>
@@ -66,7 +78,6 @@ const Reports = ({ type, data, exportScope, startDate, endDate, formatter }) => 
 
   const tableData = exportScope ? exportData : data || [];
 
-  // compute totals (for preview)
   const totals = tableData.reduce(
     (acc, row) => {
       const rtype = row.type || (row.source ? "Income" : row.category ? "Expense" : "Expense");
@@ -83,53 +94,56 @@ const Reports = ({ type, data, exportScope, startDate, endDate, formatter }) => 
       <CardContent>
         <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
           <Typography variant="h6" gutterBottom>
-            {exportScope ? "Export Preview" : type === "monthly" ? "Monthly Summary" : "Category Totals"}
+            {exportScope
+              ? t("exportData")
+              : type === "monthly"
+              ? t("monthlySummary")
+              : t("categoryTotals")}
           </Typography>
 
           {exportScope && (
             <Box textAlign="right">
               <Typography variant="body2" fontWeight="bold">
-                Total Income: {formatter ? formatter(totals.income) : totals.income}
+                {t("totalIncome")}: {formatter ? formatter(totals.income) : totals.income}
               </Typography>
-
               <Typography variant="body2" fontWeight="bold">
-                Total Expense: {formatter ? formatter(totals.expense) : totals.expense}
+                {t("expenses")}: {formatter ? formatter(totals.expense) : totals.expense}
               </Typography>
-
               <Typography variant="body2" fontWeight="bold">
-                Net balance: {formatter ? formatter(totals.income - totals.expense) : totals.income - totals.expense}
+                {t("netBalance")}:{" "}
+                {formatter ? formatter(totals.income - totals.expense) : totals.income - totals.expense}
               </Typography>
             </Box>
           )}
         </Box>
 
         {tableData.length === 0 ? (
-          <Typography>No records found for this range.</Typography>
+          <Typography>{t("noRecordsYet", { type: exportScope ? t("records") : t(type) })}</Typography>
         ) : (
           <Table>
             <TableHead>
               <TableRow>
                 {exportScope ? (
                   <>
-                    <TableCell sx={{ width: "15%" }}>Date</TableCell>
-                    <TableCell sx={{ width: "15%" }}>Type</TableCell>
-                    <TableCell sx={{ width: "15%" , pr: 6 }} align="right" >
-                      Amount
+                    <TableCell sx={{ width: "15%" }}>{t("date")}</TableCell>
+                    <TableCell sx={{ width: "15%" }}>{t("type")}</TableCell>
+                    <TableCell sx={{ width: "15%", pr: 6 }} align="right">
+                      {t("amount")}
                     </TableCell>
-                    <TableCell sx={{ width: "25%" }}>Category / Source</TableCell>
-                    <TableCell sx={{ width: "30%" }}>Note</TableCell>
+                    <TableCell sx={{ width: "25%" }}>{t("category")}/{t("source")}</TableCell>
+                    <TableCell sx={{ width: "30%" }}>{t("note")}</TableCell>
                   </>
                 ) : type === "monthly" ? (
                   <>
-                    <TableCell>Month</TableCell>
-                    <TableCell align="right">Income</TableCell>
-                    <TableCell align="right">Expenses</TableCell>
-                    <TableCell align="right">Net Balance</TableCell>
+                    <TableCell>{t("month")}</TableCell>
+                    <TableCell align="right">{t("income")}</TableCell>
+                    <TableCell align="right">{t("expenses")}</TableCell>
+                    <TableCell align="right">{t("netBalance")}</TableCell>
                   </>
                 ) : (
                   <>
-                    <TableCell>Category</TableCell>
-                    <TableCell align="right">Amount</TableCell>
+                    <TableCell>{t("category")}</TableCell>
+                    <TableCell align="right">{t("amount")}</TableCell>
                   </>
                 )}
               </TableRow>
@@ -139,7 +153,7 @@ const Reports = ({ type, data, exportScope, startDate, endDate, formatter }) => 
                 exportScope ? (
                   <TableRow key={row.id || row._id || idx}>
                     <TableCell>{formatDateDMY(row.date)}</TableCell>
-                    <TableCell>{row.type || (row.source ? "Income" : "Expense")}</TableCell>
+                    <TableCell>{row.type || (row.source ? t("income") : t("expense"))}</TableCell>
                     <TableCell
                       align="right"
                       sx={{ pr: 6 }}

@@ -9,7 +9,9 @@ const incomeSchema = new mongoose.Schema(
     userEmail: { type: String, required: true },
 
     amount: { type: Number, required: true, min: 0 },
-    source: { type: String, enum: INCOME_SOURCES, required: true },
+    source: { type: String, required: true, trim: true },
+
+    //source: { type: String, enum: INCOME_SOURCES, required: true },
     note: { type: String, trim: true },
     date: { type: Date, default: Date.now },
     active: { type: Boolean, default: true }
