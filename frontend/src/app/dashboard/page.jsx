@@ -68,7 +68,8 @@ const Dashboard = () => {
   }, [currencyCode]);
 
   // ✅ wait for translations to be ready to avoid SSR mismatch
-  if (!ready) return null;
+  if (!ready || !user) return null; // ✅ prevents SSR mismatch
+
 
   const menuItems = [
     { text: t("dashboard"), icon: <DashboardIcon />, path: "/dashboard" },

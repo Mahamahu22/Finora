@@ -201,14 +201,14 @@ const Reportspage = () => {
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={12} sm={4}>
               <Calendar
-                label={t("startDate")}
+                label={t("startDate(MM/DD/YYYY)")}
                 value={startDate}
                 onChange={(val) => setStartDate(val || dayjs().startOf("month"))}
               />
             </Grid>
             <Grid item xs={12} sm={4}>
               <Calendar
-                label={t("endDate")}
+                label={t("endDate(MM/DD/YYYY)")}
                 value={endDate}
                 onChange={(val) => setEndDate(val || dayjs().endOf("month"))}
               />

@@ -73,5 +73,39 @@
   "confirmDelete": "Confirm Delete",
   "deleteRecordConfirmation": "Are you sure you want to delete this {{type}} record?",
   "dark": "Dark",
-  "light": "Light"
+  "light": "Light",
+ "deleteConfirmTitle": "Are you sure you want to delete?",
+ 
+  "ok": "OK",
+  "incomeDeleted": "Income deleted successfully",
+  "expenseDeleted": "Expense deleted successfully",
+  "deleteFailed": "Failed to delete {{type}}",
+   "login": "Login",
+   "noTokenReceived": "No token received from server",
+  "loginSuccess": "Login successful",
+  "somethingWentWrong": "Something went wrong",
+  "heroTitle": "Get Started. Track. Save. Grow.",
+  "heroSubtitle": "Manage money wisely, visualize reports, and achieve your dreams.",
+  "expensesDesc": "Record and categorize your spending with ease.",
+  
+  "incomeDesc": "Track all your income sources in one place.",
+  "reportsDesc": "Visualize your data with charts and insights.",
+
+  "focusedOnYou": "Focused on you — helping you grow personally and financially.",
+  "clarityControl": "Clarity & control — a clear view of your income and expenses.",
+  "holisticApproach": "A holistic approach — not just money, but life balance too.",
+  "trustedPartner": "Trusted partner — professional, simple, and reliable.",
+  "securePrivate": "Secure & private — your data is encrypted and safe.",
+
+  "buildBetterHabits": "Build Better Habits",
+  "liveYourDreams": "Live Your Dreams",
+  "businessIdeas": "99 Business Ideas",
+  "managingMoney": "Managing Money",
+   "createAccount": "Create Account",
+  "name": "Name",
+  "email": "Email",
+  "password": "Password",
+  "register": "Register",
+  "registeredSuccessfully": "Registered successfully"
+
 }

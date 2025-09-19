@@ -21,6 +21,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { alpha } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { getUser, removeUser } from "../utils/storage";
+import { useTranslation } from "react-i18next"; // ✅ Import t
 
 const NavBar = () => {
   const [open, setOpen] = useState(false);
@@ -28,8 +29,8 @@ const NavBar = () => {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const theme = useTheme();
+  const { t } = useTranslation(); // ✅ Hook
 
-  // Check login from localStorage helper
   const checkLogin = () => {
     const u = getUser();
     setIsLoggedIn(!!u);
@@ -49,27 +50,29 @@ const NavBar = () => {
     };
   }, []);
 
-  // Avoid hydration mismatch
   if (!mounted) return null;
 
-  const navItems = isLoggedIn ? ["Home", "Dashboard", "Profile", "Logout"] : ["Home", "Login"];
+  // ✅ Use t() keys here
+  const navItems = isLoggedIn
+    ? [t("home"), t("dashboard"), t("profile"), t("logout")]
+    : [t("home"), t("login")];
 
   const handleNavClick = (item) => {
     setOpen(false);
     switch (item) {
-      case "Home":
+      case t("home"):
         router.push("/");
         break;
-      case "Dashboard":
+      case t("dashboard"):
         router.push("/dashboard");
         break;
-      case "Profile":
+      case t("profile"):
         router.push("/profile");
         break;
-      case "Login":
+      case t("login"):
         router.push("/loginpage");
         break;
-      case "Logout":
+      case t("logout"):
         removeUser();
         setIsLoggedIn(false);
         router.push("/loginpage");
@@ -79,22 +82,14 @@ const NavBar = () => {
     }
   };
 
-  // Pick AppBar background:
-  // - keep your brown for light mode
-  // - use theme.palette.primary.main for dark mode (so it matches Footer)
-  const lightAppBarBg = "#4E342E"; // existing brown for light
-  const darkAppBarBg = theme.palette.primary?.main ?? "#6289aa"; // primary.main (fallback)
+  const lightAppBarBg = "#4E342E";
+  const darkAppBarBg = theme.palette.primary?.main ?? "#6289aa";
   const appBarBg = theme.palette.mode === "dark" ? darkAppBarBg : lightAppBarBg;
-
-  // Text that contrasts with appBarBg
   const appBarTextColor = theme.palette.getContrastText(appBarBg);
-
-  // Hover tint for buttons
   const hoverBg = alpha(appBarBg, 0.12);
 
   return (
     <>
-      {/* Global font & page background follow theme */}
       <GlobalStyles
         styles={{
           "html, body": {
@@ -110,13 +105,9 @@ const NavBar = () => {
       <AppBar
         position="fixed"
         elevation={0}
-        sx={{
-          backgroundColor: appBarBg,
-          color: appBarTextColor,
-        }}
+        sx={{ backgroundColor: appBarBg, color: appBarTextColor }}
       >
         <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-          {/* Brand */}
           <Box
             sx={{ display: "flex", alignItems: "center", gap: 1, cursor: "pointer" }}
             onClick={() => router.push("/")}
@@ -136,7 +127,6 @@ const NavBar = () => {
             </Typography>
           </Box>
 
-          {/* Desktop Nav */}
           <Box sx={{ display: { xs: "none", sm: "flex" }, gap: 2 }}>
             {navItems.map((item) => (
               <Button
@@ -155,7 +145,6 @@ const NavBar = () => {
             ))}
           </Box>
 
-          {/* Mobile toggle */}
           <IconButton
             edge="end"
             aria-label="menu"
@@ -167,7 +156,6 @@ const NavBar = () => {
         </Toolbar>
       </AppBar>
 
-      {/* Spacer so page content isn't covered by fixed AppBar */}
       <Toolbar />
 
       <Drawer anchor="right" open={open} onClose={() => setOpen(false)}>
