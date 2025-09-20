@@ -82,8 +82,8 @@ const NavBar = () => {
     }
   };
 
-  const lightAppBarBg = "#4E342E";
-  const darkAppBarBg = theme.palette.primary?.main ?? "#6289aa";
+  const lightAppBarBg = "#4E342E"
+   const darkAppBarBg = theme.palette.primary?.main ?? "#6289aa";
   const appBarBg = theme.palette.mode === "dark" ? darkAppBarBg : lightAppBarBg;
   const appBarTextColor = theme.palette.getContrastText(appBarBg);
   const hoverBg = alpha(appBarBg, 0.12);
